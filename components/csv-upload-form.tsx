@@ -17,7 +17,9 @@ export default function CSVUploadForm() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [preview, setPreview] = useState<Array<{ orderName: string; tracking: string }>>([])
+  const [submitMode, setSubmitMode] = useState<'csv' | 'api'>('csv')
 
   useEffect(() => {
     // Set default date to today + 21 days
@@ -94,6 +96,7 @@ export default function CSVUploadForm() {
 
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       const orders = preview.map(row => ({
@@ -102,36 +105,63 @@ export default function CSVUploadForm() {
         products: [{ productId: selectedProduct, quantity: 1 }],
       }))
 
-      const res = await fetch('/api/generate-csv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orders,
-          estimatedArrivalDate: estimatedArrival,
-        }),
-      })
+      if (submitMode === 'api') {
+        // Submit to CustomsCity API
+        const res = await fetch('/api/submit-customscity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orders,
+            estimatedArrivalDate: estimatedArrival,
+          }),
+        })
 
-      if (!res.ok) {
-        throw new Error('Failed to generate CSV')
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || data.message || 'Failed to submit to CustomsCity')
+        }
+
+        setSuccess(`Successfully submitted ${data.successful} of ${data.total} documents to CustomsCity!`)
+        
+        // Reset form on success
+        setFile(null)
+        setPreview([])
+        const fileInput = document.getElementById('csv-file') as HTMLInputElement
+        if (fileInput) fileInput.value = ''
+      } else {
+        // Generate CSV
+        const res = await fetch('/api/generate-csv', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orders,
+            estimatedArrivalDate: estimatedArrival,
+          }),
+        })
+
+        if (!res.ok) {
+          throw new Error('Failed to generate CSV')
+        }
+
+        const blob = await res.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `pn-filing-${Date.now()}.csv`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        // Reset form
+        setFile(null)
+        setPreview([])
+        const fileInput = document.getElementById('csv-file') as HTMLInputElement
+        if (fileInput) fileInput.value = ''
       }
-
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `pn-filing-${Date.now()}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-
-      // Reset form
-      setFile(null)
-      setPreview([])
-      const fileInput = document.getElementById('csv-file') as HTMLInputElement
-      if (fileInput) fileInput.value = ''
     } catch (err) {
-      setError('Failed to generate CSV')
+      setError(err instanceof Error ? err.message : 'Operation failed')
       console.error(err)
     } finally {
       setLoading(false)
@@ -193,6 +223,41 @@ export default function CSVUploadForm() {
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Submission Method
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="submitMode"
+                value="csv"
+                checked={submitMode === 'csv'}
+                onChange={(e) => setSubmitMode(e.target.value as 'csv' | 'api')}
+                className="mr-2"
+              />
+              <span className="text-sm">Download CSV</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="submitMode"
+                value="api"
+                checked={submitMode === 'api'}
+                onChange={(e) => setSubmitMode(e.target.value as 'csv' | 'api')}
+                className="mr-2"
+              />
+              <span className="text-sm">Submit to CustomsCity</span>
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            {submitMode === 'csv' 
+              ? 'Generate CSV file for manual upload to CustomsCity'
+              : 'Submit directly to CustomsCity API (requires API key)'}
+          </p>
+        </div>
+
         {preview.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">
@@ -226,8 +291,12 @@ export default function CSVUploadForm() {
           </div>
         )}
 
+        {success && (
+          <div className="text-green-600 text-sm bg-green-50 p-3 rounded">{success}</div>
+        )}
+
         {error && (
-          <div className="text-red-600 text-sm">{error}</div>
+          <div className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</div>
         )}
 
         <button
@@ -235,7 +304,9 @@ export default function CSVUploadForm() {
           disabled={loading || !file || !selectedProduct || preview.length === 0}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Generating...' : 'Generate CSV'}
+          {loading 
+            ? (submitMode === 'api' ? 'Submitting to CustomsCity...' : 'Generating CSV...') 
+            : (submitMode === 'api' ? 'Submit to CustomsCity' : 'Generate CSV')}
         </button>
       </form>
     </div>
