@@ -107,6 +107,9 @@ export async function generateCSVRows(
         continue
       }
 
+      // Type assertion to ensure TypeScript knows the product type
+      const typedProduct: { id: string; productCode: string } = product
+
       const row: CSVRow = {
         'Entry Type': settings.csv_entryType || '11',
         'Reference Qualifier': settings.csv_referenceQualifier || 'EXB',
@@ -131,7 +134,7 @@ export async function generateCSVRows(
         'Consignee Postal Code': shippingInfo.consigneePostalCode,
         'Consignee Country': shippingInfo.consigneeCountry,
         'Description': settings.csv_description || '',
-        'Product ID': product.productCode,
+        'Product ID': typedProduct.productCode,
         'PGA Product Base UOM': settings.csv_pgaProductBaseUOM || '',
         'PGA Product Base Quantity': productEntry.quantity.toString(),
         'PGA Product Packaging UOM 1': settings.csv_pgaProductPackagingUOM1 || '',
