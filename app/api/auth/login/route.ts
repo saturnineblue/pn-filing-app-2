@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
 
-export async function POST(request: Request) {
+export const dynamic = 'force-dynamic'
+
+export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
     
@@ -44,4 +46,8 @@ export async function POST(request: Request) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }
