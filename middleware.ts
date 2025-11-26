@@ -8,8 +8,8 @@ const SESSION_COOKIE = 'pn-filer-session'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow access to login page
-  if (pathname === '/login') {
+  // Allow access to login page and auth API routes
+  if (pathname === '/login' || pathname.startsWith('/api/auth/')) {
     return NextResponse.next()
   }
 
