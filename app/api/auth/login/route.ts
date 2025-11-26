@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createSession } from '@/lib/auth'
+import { SignJWT } from 'jose'
 
 export async function POST(request: Request) {
   try {
@@ -20,8 +20,23 @@ export async function POST(request: Request) {
     }
 
     if (submittedPassword === appPassword) {
-      await createSession()
-      return NextResponse.json({ success: true })
+      const token = await new SignJWT({ authenticated: true })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('7d')
+        .sign(new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret'))
+
+      const response = NextResponse.json({ success: true })
+      
+      response.cookies.set('pn-filer-session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      })
+      
+      return response
     }
 
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
