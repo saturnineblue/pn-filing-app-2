@@ -65,9 +65,8 @@ JWT_SECRET=your-jwt-secret-key-min-32-chars
 SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 SHOPIFY_ACCESS_TOKEN=your-shopify-admin-api-token
 
-# Database (these will be provided by Vercel Postgres)
-POSTGRES_PRISMA_URL=
-POSTGRES_URL_NON_POOLING=
+# Database (provided by Vercel Postgres)
+POSTGRES_URL=
 ```
 
 #### Environment Variable Details
@@ -76,8 +75,7 @@ POSTGRES_URL_NON_POOLING=
 - **JWT_SECRET**: A secret key for JWT token signing (minimum 32 characters)
 - **SHOPIFY_STORE_DOMAIN**: Your Shopify store domain (e.g., `yourstore.myshopify.com`)
 - **SHOPIFY_ACCESS_TOKEN**: Shopify Admin API access token with `read_orders` permission
-- **POSTGRES_PRISMA_URL**: Provided by Vercel Postgres (connection pooling URL)
-- **POSTGRES_URL_NON_POOLING**: Provided by Vercel Postgres (direct connection URL)
+- **POSTGRES_URL**: Provided by Vercel Postgres (database connection URL)
 
 ### 4. Set Up Shopify Admin API Access
 
@@ -173,8 +171,7 @@ Vercel will automatically:
    - ✅ JWT_SECRET
    - ✅ SHOPIFY_STORE_DOMAIN
    - ✅ SHOPIFY_ACCESS_TOKEN
-   - ✅ POSTGRES_PRISMA_URL (added by Vercel)
-   - ✅ POSTGRES_URL_NON_POOLING (added by Vercel)
+   - ✅ POSTGRES_URL (added by Vercel)
 
 ##### 5.6. Redeploy After Database Setup
 
@@ -256,7 +253,7 @@ After running the setup:
 **Problem**: "Can't reach database server" error
 
 **Solutions**:
-1. Verify `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING` are set in Vercel
+1. Verify `POSTGRES_URL` is set in Vercel
 2. Check if the database was created successfully in Storage tab
 3. Redeploy the application after adding the database
 4. Check Vercel Function logs for detailed error messages

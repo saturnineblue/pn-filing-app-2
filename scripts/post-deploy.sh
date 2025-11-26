@@ -46,7 +46,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Step 2: Validating environment variables..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-REQUIRED_VARS=("POSTGRES_PRISMA_URL" "POSTGRES_URL_NON_POOLING" "APP_PASSWORD" "JWT_SECRET" "SHOPIFY_STORE_DOMAIN" "SHOPIFY_ACCESS_TOKEN")
+REQUIRED_VARS=("POSTGRES_URL" "APP_PASSWORD" "JWT_SECRET" "SHOPIFY_STORE_DOMAIN" "SHOPIFY_ACCESS_TOKEN")
 MISSING_VARS=()
 
 for var in "${REQUIRED_VARS[@]}"; do
