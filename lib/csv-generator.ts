@@ -77,9 +77,12 @@ export async function generateCSVRows(
   // Get all products
   const productIds = [...new Set(orders.flatMap(o => o.products.map(p => p.productId)))]
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds } }
+    where: { id: { in: productIds } },
+    select: { id: true, productCode: true }
   })
-  const productMap = new Map(products.map((p: { id: string; productCode: string }) => [p.id, p]))
+  const productMap = new Map<string, { id: string; productCode: string }>(
+    products.map((p: { id: string; productCode: string }) => [p.id, p])
+  )
 
   // Format the date
   const formattedDate = format(estimatedArrivalDate, 'MM/dd/yyyy')
