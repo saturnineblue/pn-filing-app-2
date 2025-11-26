@@ -13,6 +13,46 @@ interface ShopifyOrder {
   } | null
 }
 
+// US State name to 2-letter code mapping
+const US_STATE_CODES: Record<string, string> = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+  'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+  'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+  'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+  'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+  'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+  'District of Columbia': 'DC', 'Puerto Rico': 'PR', 'Guam': 'GU', 'Virgin Islands': 'VI',
+  'American Samoa': 'AS', 'Northern Mariana Islands': 'MP'
+}
+
+/**
+ * Converts US state/province name to 2-letter code
+ * If already a 2-letter code or unknown, returns as-is
+ */
+export function convertToStateCode(province: string): string {
+  if (!province) return ''
+  
+  // If already 2 letters and uppercase, assume it's already a code
+  if (province.length === 2 && province === province.toUpperCase()) {
+    return province
+  }
+  
+  // Try exact match (case-insensitive)
+  const normalized = province.trim()
+  for (const [stateName, code] of Object.entries(US_STATE_CODES)) {
+    if (stateName.toLowerCase() === normalized.toLowerCase()) {
+      return code
+    }
+  }
+  
+  // If no match found, return original (might be international)
+  return province
+}
+
 interface ShopifyResponse {
   data?: {
     orders?: {
@@ -146,7 +186,7 @@ export function formatShippingAddress(order: ShopifyOrder): {
       ? [addr.address1, addr.address2].filter(Boolean).join(' ')
       : '',
     consigneeCity: addr?.city || '',
-    consigneeState: addr?.province || '',
+    consigneeState: convertToStateCode(addr?.province || ''),
     consigneePostalCode: addr?.zip || '',
     consigneeCountry: addr?.countryCodeV2 || '',
   }

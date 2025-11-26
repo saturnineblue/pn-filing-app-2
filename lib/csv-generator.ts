@@ -34,7 +34,7 @@ export interface CSVRow {
   'Consignee State or Province': string
   'Consignee Postal Code': string
   'Consignee Country': string
-  'Description': string
+  'OI Description': string
   'Product ID': string
   'PGA Product Base UOM': string
   'PGA Product Base Quantity': string
@@ -133,7 +133,7 @@ export async function generateCSVRows(
         'Consignee State or Province': shippingInfo.consigneeState,
         'Consignee Postal Code': shippingInfo.consigneePostalCode,
         'Consignee Country': shippingInfo.consigneeCountry,
-        'Description': settings.csv_description || '',
+        'OI Description': settings.csv_description || '',
         'Product ID': typedProduct.productCode,
         'PGA Product Base UOM': settings.csv_pgaProductBaseUOM || '',
         'PGA Product Base Quantity': productEntry.quantity.toString(),
