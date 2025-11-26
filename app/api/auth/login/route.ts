@@ -11,10 +11,15 @@ export async function POST(request: NextRequest) {
     const submittedPassword = password?.trim()
     const appPassword = process.env.APP_PASSWORD?.trim()
     
-    // Log for debugging (remove after fixing)
+    // Detailed logging for debugging
+    console.log('=== LOGIN ATTEMPT ===')
     console.log('APP_PASSWORD exists:', !!appPassword)
+    console.log('APP_PASSWORD value:', appPassword)
     console.log('APP_PASSWORD length:', appPassword?.length)
+    console.log('Submitted password:', submittedPassword)
     console.log('Submitted password length:', submittedPassword?.length)
+    console.log('Passwords match:', submittedPassword === appPassword)
+    console.log('====================')
     
     if (!appPassword) {
       console.error('APP_PASSWORD environment variable is not set')
