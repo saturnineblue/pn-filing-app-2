@@ -15,6 +15,7 @@ interface ShopifyOrder {
 
 // US State name to 2-letter code mapping
 const US_STATE_CODES: Record<string, string> = {
+  // 50 US States
   'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
   'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
   'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
@@ -25,8 +26,19 @@ const US_STATE_CODES: Record<string, string> = {
   'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
   'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
   'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
-  'District of Columbia': 'DC', 'Puerto Rico': 'PR', 'Guam': 'GU', 'Virgin Islands': 'VI',
-  'American Samoa': 'AS', 'Northern Mariana Islands': 'MP'
+  
+  // Federal District
+  'District of Columbia': 'DC',
+  
+  // US Territories
+  'Puerto Rico': 'PR', 'Guam': 'GU', 'Virgin Islands': 'VI',
+  'American Samoa': 'AS', 'Northern Mariana Islands': 'MP',
+  'Federated States of Micronesia': 'FM', 'Marshall Islands': 'MH', 'Palau': 'PW',
+  'U.S. Minor Outlying Islands': 'UM',
+  
+  // Military Postal Codes (APO/FPO/DPO addresses)
+  'Armed Forces Americas': 'AA', 'Armed Forces Europe': 'AE', 'Armed Forces Pacific': 'AP',
+  'AA': 'AA', 'AE': 'AE', 'AP': 'AP' // Allow pass-through of military codes
 }
 
 /**
