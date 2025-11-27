@@ -18,7 +18,13 @@ interface ManualOrder {
   }>
 }
 
-export default function ManualEntryForm() {
+interface ManualEntryFormProps {
+  addLog: (level: 'info' | 'success' | 'error' | 'warning', message: string) => void
+  startLogging: () => void
+  stopLogging: () => void
+}
+
+export default function ManualEntryForm({ addLog, startLogging, stopLogging }: ManualEntryFormProps) {
   const [orders, setOrders] = useState<ManualOrder[]>([
     { orderName: '', trackingNumber: '', products: [{ productId: '', quantity: 1 }] }
   ])
@@ -107,6 +113,19 @@ export default function ManualEntryForm() {
 
     try {
       if (submitMode === 'api') {
+        // Start logging
+        startLogging()
+        addLog('info', '========================================')
+        addLog('info', `Starting CustomsCity submission for ${validOrders.length} order(s)...`)
+        
+        // Log each order being processed
+        validOrders.forEach((order, index) => {
+          const productCount = order.products.filter(p => p.productId && p.quantity > 0).length
+          addLog('info', `Order ${index + 1}/${validOrders.length}: ${order.orderName} (${productCount} product(s))`)
+        })
+        
+        addLog('info', 'Preparing FDA PN documents...')
+        
         // Submit to CustomsCity API
         const res = await fetch('/api/submit-customscity', {
           method: 'POST',
@@ -120,8 +139,30 @@ export default function ManualEntryForm() {
         const data = await res.json()
 
         if (!res.ok || !data.success) {
+          addLog('error', `Submission failed: ${data.error || data.message || 'Unknown error'}`)
+          if (data.results) {
+            data.results.forEach((result: any, index: number) => {
+              if (!result.success) {
+                addLog('error', `Order ${index + 1}: ${result.message || 'Failed'}`)
+              }
+            })
+          }
+          stopLogging()
           throw new Error(data.error || data.message || 'Failed to submit to CustomsCity')
         }
+
+        // Log successful submissions
+        if (data.results) {
+          data.results.forEach((result: any, index: number) => {
+            if (result.success) {
+              addLog('success', `Order ${index + 1} submitted successfully${result.documentId ? ` (Doc ID: ${result.documentId})` : ''}`)
+            }
+          })
+        }
+        
+        addLog('info', '========================================')
+        addLog('success', `Submission complete: ${data.successful}/${data.total} successful`)
+        stopLogging()
 
         setSuccess(`Successfully submitted ${data.successful} of ${data.total} documents to CustomsCity!`)
         
