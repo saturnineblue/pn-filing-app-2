@@ -72,8 +72,8 @@ export async function submitToCustomsCity(
       throw new Error('CustomsCity API key is not configured')
     }
 
-    // Single POST to PN v2 endpoint
-    const response = await fetch(`${CUSTOMSCITY_API_BASE_URL}/pn-v2/submissions`, {
+    // Single POST to documents endpoint
+    const response = await fetch(`${CUSTOMSCITY_API_BASE_URL}/api/documents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
