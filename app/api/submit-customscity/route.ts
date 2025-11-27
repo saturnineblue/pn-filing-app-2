@@ -149,8 +149,29 @@ export async function POST(request: Request) {
       )
     }
 
-    // Submit to CustomsCity
+    // Submit to CustomsCity and store in database
     const result = await submitMultipleToCustomsCity(documents)
+    
+    // Store submissions in database
+    const submissions = []
+    for (let i = 0; i < result.results.length; i++) {
+      const resultItem = result.results[i]
+      const order = orders[i]
+      
+      submissions.push({
+        orderName: order.orderName,
+        trackingNumber: order.trackingNumber,
+        documentId: resultItem.documentId || null,
+        status: resultItem.success ? 'submitted' : 'failed',
+        errorMessage: resultItem.success ? null : resultItem.message,
+      })
+    }
+    
+    // Bulk create submissions
+    await prisma.submission.createMany({
+      data: submissions,
+      skipDuplicates: true,
+    })
 
     return NextResponse.json({
       success: result.failed === 0,
@@ -158,7 +179,7 @@ export async function POST(request: Request) {
       successful: result.successful,
       failed: result.failed,
       results: result.results,
-      message: `Submitted ${result.successful} of ${result.total} documents successfully`,
+      message: `Submitted ${result.successful} of ${result.total} documents. Check PNC History to retrieve PNC numbers.`,
     })
 
   } catch (error) {

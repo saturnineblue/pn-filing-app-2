@@ -24,3 +24,19 @@ model Settings {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model Submission {
+  id              String    @id @default(cuid())
+  orderName       String
+  trackingNumber  String
+  documentId      String?   // CustomsCity document ID
+  pncNumber       String?   // PNC when retrieved
+  status          String    @default("submitted") // "submitted", "pnc_received", "failed"
+  submittedAt     DateTime  @default(now())
+  pncRetrievedAt  DateTime?
+  errorMessage    String?
+  
+  @@index([orderName])
+  @@index([submittedAt])
+  @@index([status])
+}
