@@ -85,14 +85,20 @@ export async function submitToCustomsCity(
       }),
     })
 
-    if (!createResponse.ok) {
-      const errorData = await createResponse.json().catch(() => ({}))
-      throw new Error(
-        errorData.message || `CustomsCity API error: ${createResponse.status}`
-      )
+    // Parse response once
+    const createText = await createResponse.text()
+    let createResult
+    try {
+      createResult = JSON.parse(createText)
+    } catch (e) {
+      createResult = { message: createText }
     }
 
-    const createResult = await createResponse.json()
+    if (!createResponse.ok) {
+      throw new Error(
+        createResult.message || `CustomsCity API error: ${createResponse.status}`
+      )
+    }
     const documentId = createResult.documentId || createResult.id
 
     if (!documentId) {
@@ -111,10 +117,18 @@ export async function submitToCustomsCity(
       }),
     })
 
+    // Parse send response once
+    const sendText = await sendResponse.text()
+    let sendResult
+    try {
+      sendResult = JSON.parse(sendText)
+    } catch (e) {
+      sendResult = { message: sendText }
+    }
+
     if (!sendResponse.ok) {
-      const errorData = await sendResponse.json().catch(() => ({}))
       throw new Error(
-        errorData.message || `Failed to send document: ${sendResponse.status}`
+        sendResult.message || `Failed to send document: ${sendResponse.status}`
       )
     }
 
