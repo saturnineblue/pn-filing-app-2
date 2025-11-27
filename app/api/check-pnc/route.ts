@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-const CUSTOMSCITY_API_BASE_URL = 'https://app.customscity.com/api'
+const CUSTOMSCITY_API_BASE_URL = 'https://api.customscity.com'
 const CUSTOMSCITY_API_KEY = process.env.CUSTOMSCITY_API_KEY
 
 export async function POST(request: Request) {
