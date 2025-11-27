@@ -56,8 +56,8 @@ export async function POST(request: Request) {
       products.map((p: { id: string; productCode: string }) => [p.id, p])
     )
 
-    // Format the date
-    const formattedDate = format(new Date(estimatedArrivalDate), 'MM/dd/yyyy')
+    // Format the date for API (YYYY-MM-DD)
+    const formattedDate = format(new Date(estimatedArrivalDate), 'yyyy-MM-dd')
 
     // Build CustomsCity documents
     const documents = []
@@ -83,20 +83,19 @@ export async function POST(request: Request) {
         }
 
         orderProducts.push({
-          description: settings.csv_description || '',
           productId: product.productCode,
-          pgaProductBaseUOM: settings.csv_pgaProductBaseUOM || '',
-          pgaProductBaseQuantity: productEntry.quantity.toString(),
-          pgaProductPackagingUOM1: settings.csv_pgaProductPackagingUOM1 || undefined,
-          pgaProductQuantity1: settings.csv_pgaProductQuantity1 || undefined,
-          pgaProductBaseUOM2: settings.csv_pgaProductBaseUOM2 || undefined,
-          pgaProductBaseQuantity2: settings.csv_pgaProductBaseQuantity2 || undefined,
-          pgaProductPackagingUOM3: settings.csv_pgaProductPackagingUOM3 || undefined,
-          pgaProductQuantity3: settings.csv_pgaProductQuantity3 || undefined,
-          pgaProductPackagingUOM4: settings.csv_pgaProductPackagingUOM4 || undefined,
-          pgaProductQuantity4: settings.csv_pgaProductQuantity4 || undefined,
-          pgaProductPackagingUOM5: settings.csv_pgaProductPackagingUOM5 || undefined,
-          pgaProductQuantity5: settings.csv_pgaProductQuantity5 || undefined,
+          baseUom: settings.csv_pgaProductBaseUOM || '',
+          baseQuantity: productEntry.quantity,
+          packagingUom1: settings.csv_pgaProductPackagingUOM1 || undefined,
+          packagingQuantity1: settings.csv_pgaProductQuantity1 ? parseInt(settings.csv_pgaProductQuantity1) : undefined,
+          packagingUom2: settings.csv_pgaProductBaseUOM2 || undefined,
+          packagingQuantity2: settings.csv_pgaProductBaseQuantity2 ? parseInt(settings.csv_pgaProductBaseQuantity2) : undefined,
+          packagingUom3: settings.csv_pgaProductPackagingUOM3 || undefined,
+          packagingQuantity3: settings.csv_pgaProductQuantity3 ? parseInt(settings.csv_pgaProductQuantity3) : undefined,
+          packagingUom4: settings.csv_pgaProductPackagingUOM4 || undefined,
+          packagingQuantity4: settings.csv_pgaProductQuantity4 ? parseInt(settings.csv_pgaProductQuantity4) : undefined,
+          packagingUom5: settings.csv_pgaProductPackagingUOM5 || undefined,
+          packagingQuantity5: settings.csv_pgaProductQuantity5 ? parseInt(settings.csv_pgaProductQuantity5) : undefined,
         })
       }
 
@@ -110,12 +109,12 @@ export async function POST(request: Request) {
         referenceQualifier: settings.csv_referenceQualifier || 'EXB',
         referenceNumber: settings.csv_referenceNumber === 'tracking' ? order.trackingNumber : (settings.csv_referenceNumber || ''),
         modeOfTransport: settings.csv_modeOfTransport || '50',
-        noTrackingNumber: settings.csv_noTrackingNumber || 'N',
+        hasTrackingNumber: (settings.csv_noTrackingNumber || 'N') === 'N',
         billType: settings.csv_billType || 'T',
         mbolTripNumber: order.orderName,
         hbolShipmentControlNumber: order.trackingNumber,
-        estimatedDateOfArrival: formattedDate,
-        timeOfArrival: settings.csv_timeOfArrival || '11:30',
+        estimatedArrivalDate: formattedDate,
+        arrivalTime: settings.csv_timeOfArrival || '11:30',
         usPortOfArrival: settings.csv_usPortOfArrival || '4701',
         equipmentNumber: settings.csv_equipmentNumber || '',
         shipper: {
@@ -128,16 +127,17 @@ export async function POST(request: Request) {
           name: shippingInfo.consigneeName,
           address: shippingInfo.consigneeAddress,
           city: shippingInfo.consigneeCity,
-          stateOrProvince: shippingInfo.consigneeState,
+          state: shippingInfo.consigneeState,
           postalCode: shippingInfo.consigneePostalCode,
           country: shippingInfo.consigneeCountry,
         },
+        orderItemDescription: settings.csv_description || undefined,
         products: orderProducts,
         carrier: {
           name: settings.csv_carrierName || 'POST',
-          vesselName: settings.csv_vesselName || '',
+          vesselName: settings.csv_vesselName || undefined,
           voyageTripFlightNumber: order.trackingNumber,
-          railCarNumber: settings.csv_railCarNumber || '',
+          railCarNumber: settings.csv_railCarNumber || undefined,
         },
       })
     }

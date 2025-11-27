@@ -3,7 +3,7 @@
  * Documentation: https://app.customscity.com/api-documentation
  */
 
-const CUSTOMSCITY_API_BASE_URL = 'https://api.customscity.com'
+const CUSTOMSCITY_API_BASE_URL = 'https://app.customscity.com/api'
 const CUSTOMSCITY_API_KEY = process.env.CUSTOMSCITY_API_KEY
 
 interface CustomsCityDocument {
@@ -11,12 +11,12 @@ interface CustomsCityDocument {
   referenceQualifier: string
   referenceNumber: string
   modeOfTransport: string
-  noTrackingNumber: string
+  hasTrackingNumber: boolean
   billType: string
   mbolTripNumber: string
   hbolShipmentControlNumber: string
-  estimatedDateOfArrival: string
-  timeOfArrival: string
+  estimatedArrivalDate: string
+  arrivalTime: string
   usPortOfArrival: string
   equipmentNumber: string
   shipper: {
@@ -29,31 +29,31 @@ interface CustomsCityDocument {
     name: string
     address: string
     city: string
-    stateOrProvince: string
+    state: string
     postalCode: string
     country: string
   }
+  orderItemDescription?: string
   products: Array<{
-    description: string
     productId: string
-    pgaProductBaseUOM: string
-    pgaProductBaseQuantity: string
-    pgaProductPackagingUOM1?: string
-    pgaProductQuantity1?: string
-    pgaProductBaseUOM2?: string
-    pgaProductBaseQuantity2?: string
-    pgaProductPackagingUOM3?: string
-    pgaProductQuantity3?: string
-    pgaProductPackagingUOM4?: string
-    pgaProductQuantity4?: string
-    pgaProductPackagingUOM5?: string
-    pgaProductQuantity5?: string
+    baseUom: string
+    baseQuantity: number
+    packagingUom1?: string
+    packagingQuantity1?: number
+    packagingUom2?: string
+    packagingQuantity2?: number
+    packagingUom3?: string
+    packagingQuantity3?: number
+    packagingUom4?: string
+    packagingQuantity4?: number
+    packagingUom5?: string
+    packagingQuantity5?: number
   }>
   carrier: {
     name: string
-    vesselName: string
-    voyageTripFlightNumber: string
-    railCarNumber: string
+    vesselName?: string
+    voyageTripFlightNumber?: string
+    railCarNumber?: string
   }
 }
 
@@ -72,70 +72,34 @@ export async function submitToCustomsCity(
       throw new Error('CustomsCity API key is not configured')
     }
 
-    // Create the document
-    const createResponse = await fetch(`${CUSTOMSCITY_API_BASE_URL}/api/abi/documents`, {
+    // Single POST to PN v2 endpoint
+    const response = await fetch(`${CUSTOMSCITY_API_BASE_URL}/pn-v2/submissions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${CUSTOMSCITY_API_KEY}`,
       },
-      body: JSON.stringify({
-        documentType: 'FDA_PN',
-        data: document,
-      }),
+      body: JSON.stringify(document),
     })
 
-    // Parse response once
-    const createText = await createResponse.text()
-    let createResult
+    const responseText = await response.text()
+    let result
     try {
-      createResult = JSON.parse(createText)
+      result = JSON.parse(responseText)
     } catch (e) {
-      createResult = { message: createText }
+      result = { message: responseText }
     }
 
-    if (!createResponse.ok) {
+    if (!response.ok) {
       throw new Error(
-        createResult.message || `CustomsCity API error: ${createResponse.status}`
-      )
-    }
-    const documentId = createResult.documentId || createResult.id
-
-    if (!documentId) {
-      throw new Error('Document created but no ID returned')
-    }
-
-    // Send the document
-    const sendResponse = await fetch(`${CUSTOMSCITY_API_BASE_URL}/api/abi/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CUSTOMSCITY_API_KEY}`,
-      },
-      body: JSON.stringify({
-        documentId,
-      }),
-    })
-
-    // Parse send response once
-    const sendText = await sendResponse.text()
-    let sendResult
-    try {
-      sendResult = JSON.parse(sendText)
-    } catch (e) {
-      sendResult = { message: sendText }
-    }
-
-    if (!sendResponse.ok) {
-      throw new Error(
-        sendResult.message || `Failed to send document: ${sendResponse.status}`
+        result.message || `CustomsCity API error: ${response.status}`
       )
     }
 
     return {
       success: true,
-      documentId,
-      message: 'Document submitted successfully to CustomsCity',
+      documentId: result.documentId || result.id || result.submissionId,
+      message: result.message || 'Document submitted successfully to CustomsCity',
     }
   } catch (error) {
     console.error('CustomsCity API error:', error)
