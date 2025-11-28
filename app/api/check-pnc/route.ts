@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         // Query CustomsCity for document status
         // Note: Adjust this endpoint based on actual CustomsCity API documentation
         const response = await fetch(
-          `${CUSTOMSCITY_API_BASE_URL}/api/abi/documents/${submission.documentId}`,
+          `${CUSTOMSCITY_API_BASE_URL}/pn-v2/submissions/${submission.documentId}`,
           {
             method: 'GET',
             headers: {
