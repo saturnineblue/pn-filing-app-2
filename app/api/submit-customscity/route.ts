@@ -14,6 +14,8 @@ interface OrderInput {
 }
 
 export async function POST(request: Request) {
+  let documents: any[] = []
+  
   try {
     const body = await request.json()
     const { orders, estimatedArrivalDate } = body as {
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
     const formattedTime = settings.csv_timeOfArrival || '11:30'
 
     // Build CustomsCity documents (FDA PN format)
-    const documents = []
+    documents = []
 
     for (const order of orders) {
       const shopifyOrder = shopifyOrders.get(order.orderName)
@@ -225,6 +227,7 @@ export async function POST(request: Request) {
       skipDuplicates: true,
     })
 
+    // Always return the constructed payload for debugging
     return NextResponse.json({
       success: result.failed === 0,
       total: result.total,
@@ -241,6 +244,7 @@ export async function POST(request: Request) {
       {
         error: 'Failed to submit to CustomsCity',
         details: error instanceof Error ? error.message : 'Unknown error',
+        apiPayload: documents.length > 0 ? documents : null,
       },
       { status: 500 }
     )
