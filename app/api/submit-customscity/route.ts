@@ -150,14 +150,6 @@ export async function POST(request: Request) {
     }
 
     // Submit to CustomsCity and store in database
-console.log('Submitting to CustomsCity API:');
-console.log('URL: https://api.customscity.com/api/documents');
-console.log('Method: POST');
-console.log('Headers:');
-console.log('  Content-Type: application/json');
-console.log('  Authorization: Bearer [API_KEY]');
-console.log('Request Body:');
-console.log(JSON.stringify(documents, null, 2));
     const result = await submitMultipleToCustomsCity(documents)
     
     // Store submissions in database

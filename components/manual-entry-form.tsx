@@ -126,6 +126,16 @@ export default function ManualEntryForm({ addLog, startLogging, stopLogging }: M
         
         addLog('info', 'Preparing FDA PN documents...')
         
+        // Log the payload that will be sent
+        addLog('info', '========================================')
+        addLog('info', 'API Request Details:')
+        addLog('info', `URL: https://api.customscity.com/documents`)
+        addLog('info', 'Method: POST')
+        addLog('info', 'Headers: Content-Type: application/json, Authorization: Bearer [API_KEY]')
+        addLog('info', 'Request Body:')
+        addLog('info', JSON.stringify({ orders: validOrders, estimatedArrivalDate: estimatedArrival }, null, 2))
+        addLog('info', '========================================')
+        
         // Submit to CustomsCity API
         const res = await fetch('/api/submit-customscity', {
           method: 'POST',
@@ -151,14 +161,12 @@ export default function ManualEntryForm({ addLog, startLogging, stopLogging }: M
           throw new Error(data.error || data.message || 'Failed to submit to CustomsCity')
         }
 
-        // Log the API payload that was sent
+        // Log the actual API payload that was constructed
         if (data.apiPayload) {
-          addLog('info', 'API Request Details:')
-          addLog('info', `URL: https://api.customscity.com/api/documents`)
-          addLog('info', 'Method: POST')
-          addLog('info', 'Headers: Content-Type: application/json, Authorization: Bearer [API_KEY]')
-          addLog('info', 'Request Body:')
+          addLog('info', '========================================')
+          addLog('info', 'Constructed CustomsCity API Payload:')
           addLog('info', JSON.stringify(data.apiPayload, null, 2))
+          addLog('info', '========================================')
         }
 
         // Log successful submissions

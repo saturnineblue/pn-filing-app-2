@@ -124,6 +124,16 @@ export default function CSVUploadForm({ addLog, startLogging, stopLogging }: CSV
         
         addLog('info', 'Preparing FDA PN documents...')
         
+        // Log the payload that will be sent
+        addLog('info', '========================================')
+        addLog('info', 'API Request Details:')
+        addLog('info', `URL: https://api.customscity.com/documents`)
+        addLog('info', 'Method: POST')
+        addLog('info', 'Headers: Content-Type: application/json, Authorization: Bearer [API_KEY]')
+        addLog('info', 'Request Body:')
+        addLog('info', JSON.stringify({ orders, estimatedArrivalDate: estimatedArrival }, null, 2))
+        addLog('info', '========================================')
+
         // Submit to CustomsCity API
         const res = await fetch('/api/submit-customscity', {
           method: 'POST',
@@ -147,6 +157,14 @@ export default function CSVUploadForm({ addLog, startLogging, stopLogging }: CSV
           }
           stopLogging()
           throw new Error(data.error || data.message || 'Failed to submit to CustomsCity')
+        }
+
+        // Log the actual API payload that was constructed
+        if (data.apiPayload) {
+          addLog('info', '========================================')
+          addLog('info', 'Constructed CustomsCity API Payload:')
+          addLog('info', JSON.stringify(data.apiPayload, null, 2))
+          addLog('info', '========================================')
         }
 
         // Log successful submissions
