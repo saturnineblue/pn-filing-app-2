@@ -151,7 +151,7 @@ export async function POST(request: Request) {
 
     // Submit to CustomsCity and store in database
 console.log('Submitting to CustomsCity API:');
-console.log('URL: https://app.customscity.com/api/pn-v2/submissions');
+console.log('URL: https://api.customscity.com/api/documents');
 console.log('Method: POST');
 console.log('Headers:');
 console.log('  Content-Type: application/json');
@@ -187,6 +187,7 @@ console.log(JSON.stringify(documents, null, 2));
       successful: result.successful,
       failed: result.failed,
       results: result.results,
+      apiPayload: documents,
       message: `Submitted ${result.successful} of ${result.total} documents. Check PNC History to retrieve PNC numbers.`,
     })
 

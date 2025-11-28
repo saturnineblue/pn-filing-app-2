@@ -151,6 +151,16 @@ export default function ManualEntryForm({ addLog, startLogging, stopLogging }: M
           throw new Error(data.error || data.message || 'Failed to submit to CustomsCity')
         }
 
+        // Log the API payload that was sent
+        if (data.apiPayload) {
+          addLog('info', 'API Request Details:')
+          addLog('info', `URL: https://api.customscity.com/api/documents`)
+          addLog('info', 'Method: POST')
+          addLog('info', 'Headers: Content-Type: application/json, Authorization: Bearer [API_KEY]')
+          addLog('info', 'Request Body:')
+          addLog('info', JSON.stringify(data.apiPayload, null, 2))
+        }
+
         // Log successful submissions
         if (data.results) {
           data.results.forEach((result: any, index: number) => {
