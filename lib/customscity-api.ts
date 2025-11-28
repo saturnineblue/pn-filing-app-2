@@ -1,60 +1,77 @@
 /**
- * CustomsCity API Client
- * Documentation: https://app.customscity.com/api-documentation
+ * CustomsCity API Client for FDA Prior Notice Submissions
+ * Documentation: https://api.customscity.com/api-documentation
  */
 
-const CUSTOMSCITY_API_BASE_URL = 'https://api.customscity.com'
+const CUSTOMSCITY_API_BASE_URL = 'https://api.customscity.com/api'
 const CUSTOMSCITY_API_KEY = process.env.CUSTOMSCITY_API_KEY
 
-interface CustomsCityDocument {
+interface CustomsCityPNItem {
+  pgaLineNumber: number
+  productCode: string
+  productDescription?: string
+  countryOfShipment?: string
+  ultimateConsigneeName: string
+  ultimateConsigneeFeiOrDunsCode?: string | null
+  ultimateConsigneeFeiOrDuns?: string | null
+  ultimateConsigneeAddress: string
+  ultimateConsigneeAddress2?: string | null
+  ultimateConsigneeUnitNumber?: string | null
+  ultimateConsigneeCountry: string
+  ultimateConsigneeStateOrProvince: string
+  ultimateConsigneeCity: string
+  ultimateConsigneeZipPostalCode: string
+  shipperName: string
+  shipperFeiOrDunsCode?: string | null
+  shipperFeiOrDuns?: string | null
+  shipperAddress: string
+  shipperAddress2?: string | null
+  shipperUnitNumber?: string | null
+  shipperCountry: string
+  shipperStateOrProvince?: string | null
+  shipperCity: string
+  shipperZipPostalCode?: string | null
+  packaging: Array<{
+    quantity: number
+    unitOfMeasure: string
+  }>
+  itemDescription?: string
+}
+
+interface CustomsCityPNBody {
+  pncNumber?: string | null
   entryType: string
   referenceQualifier: string
-  referenceNumber: string
   modeOfTransport: string
-  hasTrackingNumber: boolean
+  referenceNumber?: string | null
+  entryNumber?: string | null
+  ftzAdmission?: string | null
+  inbondNumber?: string | null
   billType: string
-  mbolTripNumber: string
-  hbolShipmentControlNumber: string
-  estimatedArrivalDate: string
-  arrivalTime: string
-  usPortOfArrival: string
-  equipmentNumber: string
-  shipper: {
-    name: string
-    address: string
-    city: string
-    country: string
-  }
-  consignee: {
-    name: string
-    address: string
-    city: string
-    state: string
-    postalCode: string
-    country: string
-  }
-  orderItemDescription?: string
-  products: Array<{
-    productId: string
-    baseUom: string
-    baseQuantity: number
-    packagingUom1?: string
-    packagingQuantity1?: number
-    packagingUom2?: string
-    packagingQuantity2?: number
-    packagingUom3?: string
-    packagingQuantity3?: number
-    packagingUom4?: string
-    packagingQuantity4?: number
-    packagingUom5?: string
-    packagingQuantity5?: number
-  }>
-  carrier: {
-    name: string
-    vesselName?: string
-    voyageTripFlightNumber?: string
-    railCarNumber?: string
-  }
+  MBOLNumber: string
+  HBOLNumber: string
+  trip?: string | null
+  scnBol?: string | null
+  consolidationId?: string | null
+  expressCarrierTrackingNumber?: string | null
+  importingCarrier?: string | null
+  dateOfArrival: string
+  timeOfArrival: string
+  portOfArrival: string
+  equipmentNumber?: string | null
+  oiDescription?: string
+  carrierName: string
+  vesselName?: string | null
+  voyageNumber?: string | null
+  railCarNumber?: string | null
+  items: CustomsCityPNItem[]
+}
+
+interface CustomsCityDocument {
+  type: 'fda-pn'
+  send: boolean
+  sendAs: 'add' | 'replace' | 'delete'
+  body: CustomsCityPNBody[]
 }
 
 interface CustomsCityResponse {

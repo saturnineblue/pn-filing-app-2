@@ -56,10 +56,11 @@ export async function POST(request: Request) {
       products.map((p: { id: string; productCode: string }) => [p.id, p])
     )
 
-    // Format the date for API (YYYY-MM-DD)
-    const formattedDate = format(new Date(estimatedArrivalDate), 'yyyy-MM-dd')
+    // Format the date for API (YYYYMMDD)
+    const formattedDate = format(new Date(estimatedArrivalDate), 'yyyyMMdd')
+    const formattedTime = settings.csv_timeOfArrival || '11:30'
 
-    // Build CustomsCity documents
+    // Build CustomsCity documents (FDA PN format)
     const documents = []
 
     for (const order of orders) {
@@ -72,8 +73,10 @@ export async function POST(request: Request) {
 
       const shippingInfo = formatShippingAddress(shopifyOrder)
 
-      // Build products array for this order
-      const orderProducts = []
+      // Build items array for this order - each product becomes an item
+      const items = []
+      let lineNumber = 1
+      
       for (const productEntry of order.products) {
         const product = productMap.get(productEntry.productId)
         
@@ -82,63 +85,112 @@ export async function POST(request: Request) {
           continue
         }
 
-        orderProducts.push({
-          productId: product.productCode,
-          baseUom: settings.csv_pgaProductBaseUOM || '',
-          baseQuantity: productEntry.quantity,
-          packagingUom1: settings.csv_pgaProductPackagingUOM1 || undefined,
-          packagingQuantity1: settings.csv_pgaProductQuantity1 ? parseInt(settings.csv_pgaProductQuantity1) : undefined,
-          packagingUom2: settings.csv_pgaProductBaseUOM2 || undefined,
-          packagingQuantity2: settings.csv_pgaProductBaseQuantity2 ? parseInt(settings.csv_pgaProductBaseQuantity2) : undefined,
-          packagingUom3: settings.csv_pgaProductPackagingUOM3 || undefined,
-          packagingQuantity3: settings.csv_pgaProductQuantity3 ? parseInt(settings.csv_pgaProductQuantity3) : undefined,
-          packagingUom4: settings.csv_pgaProductPackagingUOM4 || undefined,
-          packagingQuantity4: settings.csv_pgaProductQuantity4 ? parseInt(settings.csv_pgaProductQuantity4) : undefined,
-          packagingUom5: settings.csv_pgaProductPackagingUOM5 || undefined,
-          packagingQuantity5: settings.csv_pgaProductQuantity5 ? parseInt(settings.csv_pgaProductQuantity5) : undefined,
+        // Build packaging array
+        const packaging = []
+        if (settings.csv_pgaProductBaseUOM && productEntry.quantity) {
+          packaging.push({
+            quantity: productEntry.quantity,
+            unitOfMeasure: settings.csv_pgaProductBaseUOM
+          })
+        }
+        if (settings.csv_pgaProductPackagingUOM1 && settings.csv_pgaProductQuantity1) {
+          packaging.push({
+            quantity: parseInt(settings.csv_pgaProductQuantity1),
+            unitOfMeasure: settings.csv_pgaProductPackagingUOM1
+          })
+        }
+        if (settings.csv_pgaProductBaseUOM2 && settings.csv_pgaProductBaseQuantity2) {
+          packaging.push({
+            quantity: parseInt(settings.csv_pgaProductBaseQuantity2),
+            unitOfMeasure: settings.csv_pgaProductBaseUOM2
+          })
+        }
+        if (settings.csv_pgaProductPackagingUOM3 && settings.csv_pgaProductQuantity3) {
+          packaging.push({
+            quantity: parseInt(settings.csv_pgaProductQuantity3),
+            unitOfMeasure: settings.csv_pgaProductPackagingUOM3
+          })
+        }
+        if (settings.csv_pgaProductPackagingUOM4 && settings.csv_pgaProductQuantity4) {
+          packaging.push({
+            quantity: parseInt(settings.csv_pgaProductQuantity4),
+            unitOfMeasure: settings.csv_pgaProductPackagingUOM4
+          })
+        }
+        if (settings.csv_pgaProductPackagingUOM5 && settings.csv_pgaProductQuantity5) {
+          packaging.push({
+            quantity: parseInt(settings.csv_pgaProductQuantity5),
+            unitOfMeasure: settings.csv_pgaProductPackagingUOM5
+          })
+        }
+
+        items.push({
+          pgaLineNumber: lineNumber++,
+          productCode: product.productCode,
+          productDescription: settings.csv_description || undefined,
+          countryOfShipment: settings.csv_shipperCountry || undefined,
+          ultimateConsigneeName: shippingInfo.consigneeName,
+          ultimateConsigneeFeiOrDunsCode: null,
+          ultimateConsigneeFeiOrDuns: null,
+          ultimateConsigneeAddress: shippingInfo.consigneeAddress,
+          ultimateConsigneeAddress2: null,
+          ultimateConsigneeUnitNumber: null,
+          ultimateConsigneeCountry: shippingInfo.consigneeCountry,
+          ultimateConsigneeStateOrProvince: shippingInfo.consigneeState,
+          ultimateConsigneeCity: shippingInfo.consigneeCity,
+          ultimateConsigneeZipPostalCode: shippingInfo.consigneePostalCode,
+          shipperName: settings.csv_shipperName || '',
+          shipperFeiOrDunsCode: null,
+          shipperFeiOrDuns: null,
+          shipperAddress: settings.csv_shipperAddress || '',
+          shipperAddress2: null,
+          shipperUnitNumber: null,
+          shipperCountry: settings.csv_shipperCountry || '',
+          shipperStateOrProvince: null,
+          shipperCity: settings.csv_shipperCity || '',
+          shipperZipPostalCode: null,
+          packaging: packaging,
+          itemDescription: settings.csv_description || undefined
         })
       }
 
-      if (orderProducts.length === 0) {
+      if (items.length === 0) {
         continue
       }
 
-      // Create CustomsCity document
+      // Create CustomsCity FDA PN document
       documents.push({
-        entryType: settings.csv_entryType || '11',
-        referenceQualifier: settings.csv_referenceQualifier || 'EXB',
-        referenceNumber: settings.csv_referenceNumber === 'tracking' ? order.trackingNumber : (settings.csv_referenceNumber || ''),
-        modeOfTransport: settings.csv_modeOfTransport || '50',
-        hasTrackingNumber: (settings.csv_noTrackingNumber || 'N') === 'N',
-        billType: settings.csv_billType || 'T',
-        mbolTripNumber: order.orderName,
-        hbolShipmentControlNumber: order.trackingNumber,
-        estimatedArrivalDate: formattedDate,
-        arrivalTime: settings.csv_timeOfArrival || '11:30',
-        usPortOfArrival: settings.csv_usPortOfArrival || '4701',
-        equipmentNumber: settings.csv_equipmentNumber || '',
-        shipper: {
-          name: settings.csv_shipperName || '',
-          address: settings.csv_shipperAddress || '',
-          city: settings.csv_shipperCity || '',
-          country: settings.csv_shipperCountry || '',
-        },
-        consignee: {
-          name: shippingInfo.consigneeName,
-          address: shippingInfo.consigneeAddress,
-          city: shippingInfo.consigneeCity,
-          state: shippingInfo.consigneeState,
-          postalCode: shippingInfo.consigneePostalCode,
-          country: shippingInfo.consigneeCountry,
-        },
-        orderItemDescription: settings.csv_description || undefined,
-        products: orderProducts,
-        carrier: {
-          name: settings.csv_carrierName || 'POST',
-          vesselName: settings.csv_vesselName || undefined,
-          voyageTripFlightNumber: order.trackingNumber,
-          railCarNumber: settings.csv_railCarNumber || undefined,
-        },
+        type: 'fda-pn' as const,
+        send: false,
+        sendAs: 'add' as const,
+        body: [{
+          pncNumber: null,
+          entryType: settings.csv_entryType || '86',
+          referenceQualifier: settings.csv_referenceQualifier || 'AWB',
+          modeOfTransport: settings.csv_modeOfTransport || '40',
+          referenceNumber: settings.csv_referenceNumber === 'tracking' ? order.trackingNumber : null,
+          entryNumber: null,
+          ftzAdmission: null,
+          inbondNumber: null,
+          billType: settings.csv_billType || 'M',
+          MBOLNumber: order.orderName,
+          HBOLNumber: order.trackingNumber,
+          trip: null,
+          scnBol: null,
+          consolidationId: null,
+          expressCarrierTrackingNumber: null,
+          importingCarrier: null,
+          dateOfArrival: formattedDate,
+          timeOfArrival: formattedTime,
+          portOfArrival: settings.csv_usPortOfArrival || '2721',
+          equipmentNumber: settings.csv_equipmentNumber || null,
+          oiDescription: settings.csv_description || undefined,
+          carrierName: settings.csv_carrierName || 'POST',
+          vesselName: settings.csv_vesselName || null,
+          voyageNumber: order.trackingNumber,
+          railCarNumber: settings.csv_railCarNumber || null,
+          items: items
+        }]
       })
     }
 
